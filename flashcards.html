@@ -173,6 +173,8 @@ let currentRunningPack = [];
 let currentRunningCard = 0; // This is always going to be zero but i hate computers so i'm leaving this.
 let currentRunningRound = 0;
 let rounds = [[], [], [], [], [], []]; // i HATE extensibility grrrr
+let roundCorrect = 0;
+let roundWrong = 0;
 
 function startGame(){
 	console.log(selectedPack);
@@ -185,6 +187,8 @@ function startGame(){
 }
 
 function startNextRound() {
+	roundCorrect = 0;
+	roundWrong = 0;
 	for(const [round, roundPack] of rounds.entries()){
 		if (roundPack.length > 0) {
 			currentRunningRound = round;
@@ -200,6 +204,7 @@ function startNextRound() {
 }
 
 function iLost(){
+	roundWrong++;
 	document.querySelector('#flip-card').classList.remove('flipped');
 	
 	let finishedCard = rounds[currentRunningRound].shift();
@@ -215,6 +220,7 @@ function iLost(){
 }
 
 function iWon(){
+	roundCorrect++; 
 	document.querySelector('#flip-card').classList.remove('flipped');
 	
 	let finishedCard = rounds[currentRunningRound].shift();
@@ -253,6 +259,8 @@ function displayRounds() {
 	document.querySelector('#round-done').innerHTML = rounds[5].length;
 	
 	document.querySelector(`#round-${currentRunningRound + 1}`).style.backgroundColor = "rgba(201, 233, 203, 0.5)";
+	document.querySelector('#right-bar').innerHTML = roundCorrect;
+	document.querySelector('#wrong-bar').innerHTML = roundWrong;
 }
 
 function startPack(i) {

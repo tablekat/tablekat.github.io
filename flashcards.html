@@ -205,10 +205,13 @@ function iLost(){
 	let finishedCard = rounds[currentRunningRound].shift();
 	rounds[0].push(finishedCard);
 	if (rounds[currentRunningRound].length == 0) {
-		startNextRound();
+		return startNextRound();
 	}
-	displayRunningCard();
 	displayRounds();
+	// Wait out the flip animation
+	setTimeout(() => {
+		displayRunningCard();
+	}, 200);
 }
 
 function iWon(){
@@ -217,10 +220,13 @@ function iWon(){
 	let finishedCard = rounds[currentRunningRound].shift();
 	rounds[currentRunningRound + 1].push(finishedCard);
 	if (rounds[currentRunningRound].length == 0) {
-		startNextRound();
+		return startNextRound();
 	}
-	displayRunningCard();
 	displayRounds();
+	// Wait out the flip animation
+	setTimeout(() => {
+		displayRunningCard();
+	}, 200);
 }
 
 function flipCard() {

@@ -22,7 +22,7 @@ div {
 .card {
 	display: flex;
 	border: 1px solid black;
-	border-radius: 5px;
+	border-radius: 8px;
 	align-items: center;
 	justify-content: center;
 	box-shadow: 6px 10px 10px rgba(0, 0, 0, 0.4);
@@ -68,7 +68,7 @@ div {
   transition: transform 0.3s;
   transform-style: preserve-3d;
 }
-#flip-card:hover #flip-card-inner {
+#flip-card:hover #flip-card-inner, #flip-card.flipped #flip-card-inner {
   transform: rotateX(180deg);
 }
 #card-front, #card-back {
@@ -85,29 +85,168 @@ div {
 	display: flex;
 	flex-direction: column;
 }
+
+#card-row {
+	display: flex;
+}
+#score-box {
+	padding: 40px;
+	display: flex;
+	flex-direction: column;
+}
+#score-box table {
+	border-top: 1px solid rgba(0, 0, 0, 0.6);
+	border-left: 1px solid rgba(0, 0, 0, 0.6);
+	border-collapse: collapse;
+}
+#score-box td {
+	border-bottom: 1px solid rgba(0, 0, 0, 0.6);
+	border-right: 1px solid rgba(0, 0, 0, 0.6);
+	padding: 3px 6px;
+}
+
+#current-run-info {
+	margin: 20px 0px;
+}
+
+
+button {
+	margin: 0px;
+	border-radius: 8px;
+	color: white;
+    font-weight: bold;
+	border: 2px solid;
+	border-color: rgb(30 90 151);
+	background: rgb(121 171 225);
+	padding: 3px 12px;
+}
+button:hover {
+	box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
+	transform: translate(-3px, -3px);
+}
+button:active {
+	box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
+	transform: translate(1px, 1px);
+}
+#start-button {
+	width: 200px;
+	height: 30px;
+	margin-top: 20px;
+	margin-left: 20px
+}
+
+#control {
+	padding: 10px;
+}
+#scoring-buttons {
+	display: flex;
+	margin-top: 4px;
+}
+#control button {
+	width: 500px;
+	height: 40px;
+}
+#scoring-buttons button {
+	width: 250px;
+}
+#control #flip-button {
+	border-color: rgb(30 90 151);
+	background: rgb(121 171 225);
+}
+#control #i-lost-button {
+	border-color: rgb(151 30 30);
+	background: rgb(225 121 121);
+}
+#control #i-won-button {
+	border-color: rgb(30 151 44);
+	background: rgb(121 225 129);
+}
 </style>
 <script>
+const PACK_SIZE = 30;
+
 let vocab = [];
 let packList = [];
 let selectedPack = 0;
 
 let currentRunningPack = [];
-let currentRunningCard;
+let currentRunningCard = 0; // This is always going to be zero but i hate computers so i'm leaving this.
+let currentRunningRound = 0;
+let rounds = [[], [], [], [], [], []]; // i HATE extensibility grrrr
 
 function startGame(){
 	console.log(selectedPack);
-	currentRunningPack = [...packList[selectedPack]].sort(() => Math.random() - 0.5);
-	currentRunningCard = currentRunningPack[0];
+	currentRunningCard = 0;
+	currentRunningRound = 0;
+	let pack = [...packList[selectedPack]].sort(() => Math.random() - 0.5);
+	rounds = [pack, [], [], [], [], []];
+	
+	startNextRound();
+}
+
+function startNextRound() {
+	for(const [round, roundPack] of rounds.entries()){
+		if (roundPack.length > 0) {
+			currentRunningRound = round;
+			break;
+		}
+	}
+	if (currentRunningRound == 6) {
+		console.log("you won in case you were wondering btw gj");
+		return startGame();
+	}
 	displayRunningCard();
+	displayRounds();
+}
+
+function iLost(){
+	document.querySelector('#flip-card').classList.remove('flipped');
+	
+	let finishedCard = rounds[currentRunningRound].shift();
+	rounds[0].push(finishedCard);
+	if (rounds[currentRunningRound].length == 0) {
+		startNextRound();
+	}
+	displayRunningCard();
+	displayRounds();
+}
+
+function iWon(){
+	document.querySelector('#flip-card').classList.remove('flipped');
+	
+	let finishedCard = rounds[currentRunningRound].shift();
+	rounds[currentRunningRound + 1].push(finishedCard);
+	if (rounds[currentRunningRound].length == 0) {
+		startNextRound();
+	}
+	displayRunningCard();
+	displayRounds();
+}
+
+function flipCard() {
+	document.querySelector('#flip-card').classList.toggle('flipped');
 }
 
 function displayRunningCard() {
-	if (!currentRunningCard) return console.log('tried to display null card');
-	document.querySelector('#card-word').innerHTML = currentRunningCard.word;
-	document.querySelector('#card-back-word').innerHTML = currentRunningCard.word;
-	document.querySelector('#card-pronunciation').innerHTML = currentRunningCard.pronunciation;
-	document.querySelector('#card-translation').innerHTML = currentRunningCard.translation;
-	document.querySelector('#card-example').innerHTML = currentRunningCard.example;
+	let card = rounds[currentRunningRound][currentRunningCard];
+	if (!card) return console.log('tried to display null card');
+	document.querySelector('#card-word').innerHTML = card.word;
+	document.querySelector('#card-back-word').innerHTML = card.word;
+	document.querySelector('#card-pronunciation').innerHTML = card.pronunciation;
+	document.querySelector('#card-translation').innerHTML = card.translation;
+	document.querySelector('#card-example').innerHTML = card.example;
+}
+
+function displayRounds() {
+	console.log(rounds);
+	window.rounds = rounds;
+	for (let i = 0; i < 5; ++i) {
+		document.querySelector(`#round-${i + 1}`).innerHTML = rounds[i].length;
+		document.querySelector(`#round-${i + 1}`).style.backgroundColor = "transparent";
+	}
+	document.querySelector('#round-done').innerHTML = rounds[5].length;
+	
+	document.querySelector(`#round-${currentRunningRound + 1}`).style.backgroundColor = "rgba(201, 233, 203, 0.5)";
 }
 
 function startPack(i) {
@@ -130,14 +269,15 @@ function main() {
 	packList = [];
 	let pack = [];
 	for (const vocabLine of vocab){
-		if (pack.length > 50) {
+		if (pack.length >= PACK_SIZE) {
 			packList.push(pack);
 			pack = [];
 		}
 		pack.push(vocabLine);
 	}
 	window.packList = packList;
-	
+	startPack(0);
+	displayRounds();
 	
 	let packsListDiv = document.querySelector("#packs-available");
 	packsListDiv.innerHTML = "<div>Packs available:</div>";
@@ -145,27 +285,50 @@ function main() {
 		const allWords = pack.map(v => v.word).sort().join('|');
 		packsListDiv.innerHTML += `<div>Pack ${i+1} <button onClick='startPack(${i})'>Start</button> | ${allWords}</div>`;
 	}
-	
 }
-setTimeout(main, 1);
+window.addEventListener('load', main);
 </script>
 
 <div id="flashcard-game">
 	<div id="start-bar">
 		<button id="start-button" onClick="startGame();">Start</button>
-		<div id="right-container">Correct: <div id="right-bar">0</div></div>
-		<div id="wrong-container">Wrong: <div id="wrong-bar">0</div></div>
 	</div>
-	<div id="flip-card">
-		<div id="flip-card-inner">
-			<div id="card-front" class="card">
-				<div id="card-word">word</div>
+	<div id="card-row">
+		<div id="flip-card">
+			<div id="flip-card-inner">
+				<div id="card-front" class="card">
+					<div id="card-word">word</div>
+				</div>
+				<div id="card-back" class="card">
+					<div id="card-back-word">word</div>
+					<div id="card-pronunciation">pronunciation</div>
+					<div id="card-translation">translation</div>
+					<div id="card-example">example</div>
+				</div>
 			</div>
-			<div id="card-back" class="card">
-				<div id="card-back-word">word</div>
-				<div id="card-pronunciation">pronunciation</div>
-				<div id="card-translation">translation</div>
-				<div id="card-example">example</div>
+		</div>
+		<div id="score-box">
+			<table>
+				<tr><td>Round 1</td><td>Round 2</td><td>Round 3</td><td>Round 4</td><td>Round 5</td><td>Completed</td></tr>
+				<tr>
+					<td id="round-1"></td>
+					<td id="round-2"></td>
+					<td id="round-3"></td>
+					<td id="round-4"></td>
+					<td id="round-5"></td>
+					<td id="round-done"></td>
+				</tr>
+			</table>
+			<div id="current-run-info">
+				<div id="right-container">Correct: <div id="right-bar">0</div></div>
+				<div id="wrong-container">Wrong: <div id="wrong-bar">0</div></div>
+			</div>
+			<div id="control">
+				<button id="flip-button" onClick="flipCard();">Flip</button>
+				<div id="scoring-buttons">
+					<button id="i-lost-button" onClick="iLost();">I got it wrong</button>
+					<button id="i-won-button" onClick="iWon();">I got it right</button>
+				</div>
 			</div>
 		</div>
 	</div>

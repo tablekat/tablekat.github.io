@@ -2,6 +2,9 @@
 #vocab {
   display: none;
 }
+#customvocab {
+  display: none;
+}
 #flashcard-game {
 	display: flex;
 	flex-direction: column;
@@ -22,7 +25,7 @@ div {
 .card {
 	display: flex;
 	border: 1px solid black;
-	border-radius: 8px;
+	border-radius: 5px;
 	align-items: center;
 	justify-content: center;
 	box-shadow: 6px 10px 10px rgba(0, 0, 0, 0.4);
@@ -68,7 +71,7 @@ div {
   transition: transform 0.3s;
   transform-style: preserve-3d;
 }
-#flip-card:hover #flip-card-inner, #flip-card.flipped #flip-card-inner {
+#flip-card:hover #flip-card-inner {
   transform: rotateX(180deg);
 }
 #card-front, #card-back {
@@ -85,187 +88,52 @@ div {
 	display: flex;
 	flex-direction: column;
 }
-
-#card-row {
-	display: flex;
-}
-#score-box {
-	padding: 40px;
-	display: flex;
-	flex-direction: column;
-}
-#score-box table {
-	border-top: 1px solid rgba(0, 0, 0, 0.6);
-	border-left: 1px solid rgba(0, 0, 0, 0.6);
-	border-collapse: collapse;
-}
-#score-box td {
-	border-bottom: 1px solid rgba(0, 0, 0, 0.6);
-	border-right: 1px solid rgba(0, 0, 0, 0.6);
-	padding: 3px 6px;
-}
-
-#current-run-info {
-	margin: 20px 0px;
-}
-
-
-button {
-	margin: 0px;
-	border-radius: 8px;
-	color: white;
-    font-weight: bold;
-	border: 2px solid;
-	border-color: rgb(30 90 151);
-	background: rgb(121 171 225);
-	padding: 3px 12px;
-}
-button:hover {
-	box-shadow: 3px 3px 0px rgba(0, 0, 0, 0.2);
-	transform: translate(-3px, -3px);
-}
-button:active {
-	box-shadow: 0px 0px 0px rgba(0, 0, 0, 0);
-	transform: translate(1px, 1px);
-}
-#start-button {
-	width: 200px;
-	height: 30px;
-	margin-top: 20px;
-	margin-left: 20px
-}
-
-#control {
-	padding: 10px;
-}
-#scoring-buttons {
-	display: flex;
-	margin-top: 4px;
-}
-#control button {
-	width: 500px;
-	height: 40px;
-}
-#scoring-buttons button {
-	width: 250px;
-}
-#control #flip-button {
-	border-color: rgb(30 90 151);
-	background: rgb(121 171 225);
-}
-#control #i-lost-button {
-	border-color: rgb(151 30 30);
-	background: rgb(225 121 121);
-}
-#control #i-won-button {
-	border-color: rgb(30 151 44);
-	background: rgb(121 225 129);
-}
 </style>
 <script>
-const PACK_SIZE = 30;
-
 let vocab = [];
 let packList = [];
 let selectedPack = 0;
 
 let currentRunningPack = [];
-let currentRunningCard = 0; // This is always going to be zero but i hate computers so i'm leaving this.
-let currentRunningRound = 0;
-let rounds = [[], [], [], [], [], []]; // i HATE extensibility grrrr
-let roundCorrect = 0;
-let roundWrong = 0;
+let currentRunningCard;
 
 function startGame(){
 	console.log(selectedPack);
-	currentRunningCard = 0;
-	currentRunningRound = 0;
-	let pack = [...packList[selectedPack]].sort(() => Math.random() - 0.5);
-	rounds = [pack, [], [], [], [], []];
-	
-	startNextRound();
-}
-
-function startNextRound() {
-	roundCorrect = 0;
-	roundWrong = 0;
-	for(const [round, roundPack] of rounds.entries()){
-		if (roundPack.length > 0) {
-			currentRunningRound = round;
-			break;
-		}
-	}
-	if (currentRunningRound == 6) {
-		console.log("you won in case you were wondering btw gj");
-		return startGame();
-	}
+	currentRunningPack = [...packList[selectedPack]].sort(() => Math.random() - 0.5);
+	currentRunningCard = currentRunningPack[0];
 	displayRunningCard();
-	displayRounds();
-}
-
-function iLost(){
-	roundWrong++;
-	document.querySelector('#flip-card').classList.remove('flipped');
-	
-	let finishedCard = rounds[currentRunningRound].shift();
-	rounds[0].push(finishedCard);
-	if (rounds[currentRunningRound].length == 0) {
-		return startNextRound();
-	}
-	displayRounds();
-	// Wait out the flip animation
-	setTimeout(() => {
-		displayRunningCard();
-	}, 200);
-}
-
-function iWon(){
-	roundCorrect++; 
-	document.querySelector('#flip-card').classList.remove('flipped');
-	
-	let finishedCard = rounds[currentRunningRound].shift();
-	rounds[currentRunningRound + 1].push(finishedCard);
-	if (rounds[currentRunningRound].length == 0) {
-		return startNextRound();
-	}
-	displayRounds();
-	// Wait out the flip animation
-	setTimeout(() => {
-		displayRunningCard();
-	}, 200);
-}
-
-function flipCard() {
-	document.querySelector('#flip-card').classList.toggle('flipped');
 }
 
 function displayRunningCard() {
-	let card = rounds[currentRunningRound][currentRunningCard];
-	if (!card) return console.log('tried to display null card');
-	document.querySelector('#card-word').innerHTML = card.word;
-	document.querySelector('#card-back-word').innerHTML = card.word;
-	document.querySelector('#card-pronunciation').innerHTML = card.pronunciation;
-	document.querySelector('#card-translation').innerHTML = card.translation;
-	document.querySelector('#card-example').innerHTML = card.example;
-}
-
-function displayRounds() {
-	console.log(rounds);
-	window.rounds = rounds;
-	for (let i = 0; i < 5; ++i) {
-		document.querySelector(`#round-${i + 1}`).innerHTML = rounds[i].length;
-		document.querySelector(`#round-${i + 1}`).style.backgroundColor = "transparent";
-	}
-	document.querySelector('#round-done').innerHTML = rounds[5].length;
-	
-	document.querySelector(`#round-${currentRunningRound + 1}`).style.backgroundColor = "rgba(201, 233, 203, 0.5)";
-	document.querySelector('#right-bar').innerHTML = roundCorrect;
-	document.querySelector('#wrong-bar').innerHTML = roundWrong;
+	if (!currentRunningCard) return console.log('tried to display null card');
+	document.querySelector('#card-word').innerHTML = currentRunningCard.word;
+	document.querySelector('#card-back-word').innerHTML = currentRunningCard.word;
+	document.querySelector('#card-pronunciation').innerHTML = currentRunningCard.pronunciation;
+	document.querySelector('#card-translation').innerHTML = currentRunningCard.translation;
+	document.querySelector('#card-example').innerHTML = currentRunningCard.example;
 }
 
 function startPack(i) {
 	selectedPack = i;
 	document.querySelector('#start-button').innerHTML = "Start Pack " + (i + 1);
+}
+
+function lookupVocab(word) {
+	return vocab.find(voc => voc.word == word);
+}
+
+function loadCustomVocab() {
+	let vocabRaw = document.querySelector("#customvocab").innerHTML;
+	let customPack = vocabRaw.split('\n').filter(a => a).map(line => {
+		let word = line.trim();
+		let maybeExistant = lookupVocab(word);
+		if (maybeExistant) {
+			console.log("word found!: ", maybeExistant);
+			return maybeExistant;
+		} else {console.log("word not found: ", word);}
+		return {word: word, pronunciation: "", translation: line, example: ""};
+	});
+	return customPack;
 }
 
 function main() {
@@ -283,15 +151,15 @@ function main() {
 	packList = [];
 	let pack = [];
 	for (const vocabLine of vocab){
-		if (pack.length >= PACK_SIZE) {
+		if (pack.length > 50) {
 			packList.push(pack);
 			pack = [];
 		}
 		pack.push(vocabLine);
 	}
+	packList.push(loadCustomVocab());
 	window.packList = packList;
-	startPack(0);
-	displayRounds();
+	
 	
 	let packsListDiv = document.querySelector("#packs-available");
 	packsListDiv.innerHTML = "<div>Packs available:</div>";
@@ -299,54 +167,223 @@ function main() {
 		const allWords = pack.map(v => v.word).sort().join('|');
 		packsListDiv.innerHTML += `<div>Pack ${i+1} <button onClick='startPack(${i})'>Start</button> | ${allWords}</div>`;
 	}
+	
 }
-window.addEventListener('load', main);
+setTimeout(main, 1);
 </script>
 
 <div id="flashcard-game">
 	<div id="start-bar">
 		<button id="start-button" onClick="startGame();">Start</button>
+		<div id="right-container">Correct: <div id="right-bar">0</div></div>
+		<div id="wrong-container">Wrong: <div id="wrong-bar">0</div></div>
 	</div>
-	<div id="card-row">
-		<div id="flip-card">
-			<div id="flip-card-inner">
-				<div id="card-front" class="card">
-					<div id="card-word">word</div>
-				</div>
-				<div id="card-back" class="card">
-					<div id="card-back-word">word</div>
-					<div id="card-pronunciation">pronunciation</div>
-					<div id="card-translation">translation</div>
-					<div id="card-example">example</div>
-				</div>
+	<div id="flip-card">
+		<div id="flip-card-inner">
+			<div id="card-front" class="card">
+				<div id="card-word">word</div>
 			</div>
-		</div>
-		<div id="score-box">
-			<table>
-				<tr><td>Round 1</td><td>Round 2</td><td>Round 3</td><td>Round 4</td><td>Round 5</td><td>Completed</td></tr>
-				<tr>
-					<td id="round-1"></td>
-					<td id="round-2"></td>
-					<td id="round-3"></td>
-					<td id="round-4"></td>
-					<td id="round-5"></td>
-					<td id="round-done"></td>
-				</tr>
-			</table>
-			<div id="current-run-info">
-				<div id="right-container">Correct: <div id="right-bar">0</div></div>
-				<div id="wrong-container">Wrong: <div id="wrong-bar">0</div></div>
-			</div>
-			<div id="control">
-				<button id="flip-button" onClick="flipCard();">Flip</button>
-				<div id="scoring-buttons">
-					<button id="i-lost-button" onClick="iLost();">I got it wrong</button>
-					<button id="i-won-button" onClick="iWon();">I got it right</button>
-				</div>
+			<div id="card-back" class="card">
+				<div id="card-back-word">word</div>
+				<div id="card-pronunciation">pronunciation</div>
+				<div id="card-translation">translation</div>
+				<div id="card-example">example</div>
 			</div>
 		</div>
 	</div>
 	<div id="packs-available"></div>
+</div>
+
+
+<div id="customvocab">
+思い通り
+急いで
+納豆
+巻き
+当たり障り
+儀式
+お世話になる
+手帳
+開く
+追い越す
+論破
+道草
+贅沢
+捨てる
+正義
+嫌味
+費やす
+人生
+空騒ぎ
+粘った
+戦績
+絡まる
+電柱
+ぼーっと
+没頭
+身勝手
+癒える
+匿名
+批判
+発散
+蹴る
+濃いめ
+拭う
+名言
+響く
+真っ当
+貶す
+集団
+攻撃
+誤解
+命取り
+引き裂く
+想像
+粘り強い
+競走
+風邪気味
+本心
+了解
+災害
+夜道
+孤独
+浸る
+目が合う
+増やす
+注文
+営業中
+準備中
+何名様
+お冷
+伝票
+会計
+</div>
+
+<div id="customvocab3">
+悲しみ
+拭うよ
+溺れろ
+教わらず
+痛み
+理由
+消える
+踊り明かして
+付き合う
+捨てろ
+信じる
+半径
+余り
+語りあって
+底なし
+嘘
+砂漠
+人生設計
+積み木
+壊された
+見惚れる
+還る
+砂
+教わらず
+くせ毛
+仕草
+奪われて
+羊雲
+視線
+嘘つき
+想像上
+薄暗い
+息
+吸う
+音がする
+小指
+握る
+構わない
+失った
+近づけない
+</div>
+
+<div id="customvocab2">
+お箸
+事件
+恐怖
+違法
+公式
+否定
+不健康
+非常識
+未だ
+未経験
+未使用
+未成年
+未解決
+関西
+一瞬
+要は
+役に立つ違法
+犯罪
+合法
+意外
+終了
+電子顕微鏡
+遠足
+おはぎ
+わし
+会社員時代
+付き合い始めた
+親友
+元々
+湖
+才能
+牛乳
+育った
+連絡
+読解原因
+便利
+犯罪
+被害
+注意
+携帯
+機能
+機械
+解説
+選べる
+関係
+説明
+理解
+評価
+教師
+真逆
+真っ直ぐに
+真っ白
+全く
+軽減
+残飯
+形容詞
+来ない
+一つずつ
+表現
+表す
+似てる
+示す
+正確性
+勝負
+勝者
+悲観
+確認
+正解
+解答
+悩んで
+印象
+高評価
+コソコソ
+方向
+比較
+納品
+伝わる
+喧嘩
+必要
+もしくは
+対抗
 </div>
 
 <div id="vocab">
